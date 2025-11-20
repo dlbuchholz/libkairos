@@ -11,11 +11,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
 
+# Define source files
+set(SRC_DIR src)
+file(GLOB_RECURSE SRC_FILES "${SRC_DIR}/*.cpp" "${SRC_DIR}/*.h")
+
+# Include directories
+set(INCLUDE_DIR include)
+include_directories(${INCLUDE_DIR})
+
 add_library(libkairos STATIC
-  src/libkairos.cpp
-  src/time.cpp
-  include/libkairos/time.h
-  include/libkairos/libkairos.h
+  ${SRC_FILES}
 )
 
 target_include_directories(libkairos
