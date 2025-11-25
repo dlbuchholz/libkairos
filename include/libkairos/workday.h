@@ -33,6 +33,7 @@ public:
     QDate getDate() const;
     void setDate(const QDate &newDate);
     void sortSegmentsByStartTime();
+    WorkdaySegmentType dominantSegmentTypeForTax() const;
 
     WorkdayType getType() const;
 

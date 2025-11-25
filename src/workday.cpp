@@ -121,6 +121,70 @@ QVector<WorkdaySegment> Workday::getSegments() const
     return segments;
 }
 
+/* Returns the "dominant" segment type of the day for tax purposes.
+ *
+ * Priority:
+ *   1. OfficeWork      -> first workplace visited => not a home office day
+ *   2. BusinessTrip
+ *   3. TelecommuteWork -> only if no OfficeWork / BusinessTrip
+ *   4. Otherwise: segment type with the longest duration (if any)
+ */
+WorkdaySegmentType Workday::dominantSegmentTypeForTax() const
+{
+    bool hasOfficeWork = false;
+    bool hasTelecommuteWork = false;
+    bool hasBusinessTrip = false;
+
+    // Erste Stufe: nur Präsenz-artige Segmente erfassen (Steuerlogik)
+    for (const auto &segment : segments) {
+        switch (segment.getType()) {
+        case WorkdaySegmentType::OfficeWork:
+            hasOfficeWork = true;
+            break;
+        case WorkdaySegmentType::TelecommuteWork:
+            hasTelecommuteWork = true;
+            break;
+        case WorkdaySegmentType::BusinessTrip:
+            hasBusinessTrip = true;
+            break;
+        default:
+            break;
+        }
+    }
+
+    // Steuerliche Prioritaet:
+    if (hasOfficeWork) {
+        return WorkdaySegmentType::OfficeWork;
+    }
+    if (hasBusinessTrip) {
+        return WorkdaySegmentType::BusinessTrip;
+    }
+    if (hasTelecommuteWork) {
+        return WorkdaySegmentType::TelecommuteWork;
+    }
+
+    // Fallback: kein steuerlich relevanter Work-Segmenttyp.
+    // Nimm den Typ mit der groessten absoluten Dauer an diesem Tag.
+    if (segments.isEmpty()) {
+        return WorkdaySegmentType::Invalid; // Wenn der Parser nicht genau verstanden hat, um was für eine Tätigkeit es sich handelt
+    }
+
+    // Dauer pro Segmenttyp bestimmen
+    QMap<WorkdaySegmentType, double> absSplit = calculateModalSplitAbs();
+    WorkdaySegmentType bestType = segments.first().getType();
+    double bestHours = -1.0;
+
+    for (auto it = absSplit.constBegin(); it != absSplit.constEnd(); ++it) {
+        if (it.value() > bestHours) {
+            bestHours = it.value();
+            bestType = it.key();
+        }
+    }
+
+    return bestType;
+}
+
+
 void Workday::setSegments(const QVector<WorkdaySegment> &newSegments)
 {
     segments = newSegments;
