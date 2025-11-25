@@ -218,8 +218,7 @@ public:
      */
     double getTargetTime() const;
 
-    double getTimeValues(QString string);
-
+    double getTimeValues(QString string) const;
 private:
     mutable QVector<Workday> workdays; /**< List of workdays in the journal. */
     /**

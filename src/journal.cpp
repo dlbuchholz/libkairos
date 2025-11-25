@@ -69,13 +69,13 @@ double Journal::calculateTelecommutePeriod(const QDate& from, const QDate& to) {
 double Journal::remainingTelecommuteTime(const QDate& from, const QDate& to,
                                          const double factor,
                                          const double targetTime) {
-    double maxTelecommuteTime = Calendar::workableHours(from.year(), from.month(), targetTime) * factor;
+    double maxTelecommuteTime = Calendar::workableHours(from.year(), from.month(), targetTime, this) * factor;
     return maxTelecommuteTime - calculateTelecommutePeriod(from, to);
 }
 
 /* Returns the percentage of spent telecommute time */
 double Journal::spentTelecommuteTime(const QDate& from, const QDate& to) {
-    double workableHours = Calendar::workableHours(from.year(), from.month(), 7.8);
+    double workableHours = Calendar::workableHours(from.year(), from.month(), 7.8, this);
     return (calculateTelecommutePeriod(from, to) / workableHours);
 }
 
@@ -286,28 +286,65 @@ double Journal::getTargetTime() const
     return targetTime;
 }
 
-double Journal::getTimeValues(QString string)
-{/*
-    ApplicationController *app = ApplicationController::get_instance();
-    Logger *logger = app->getLogger();
+
+/*
+ * Purpose:
+ *    Converts a time string in the format "hh:mm" into a decimal hour value.
+ *
+ * Input:
+ *    string  A time value, expected in the format "hours:minutes".
+ *            Example: "08:30".
+ *
+ * Process:
+ *    1. Trims leading and trailing whitespace.
+ *    2. Splits the string at the colon into hour and minute components.
+ *    3. Verifies that both components exist and can be interpreted as integers.
+ *    4. Validates the numeric ranges:
+ *         Hours must be between 0 and 12.
+ *         Minutes must be between 0 and 59.
+ *       If validation fails, the function returns 0.0.
+ *    5. Computes the decimal hour result:
+ *         result = hour + (minute / 60).
+ *
+ * Output:
+ *    double  Decimal hour value.
+ *            Example: "1:30" yields 1.5.
+ *            Invalid input yields 0.0.
+ */
+double Journal::getTimeValues(QString string) const
+{
     QString timeString = string.trimmed();
-    logger->log(Logger::LogLevel::Debug, QString("string: %1").arg(timeString));
+    /*if (logger)
+        logger->log(Logger::LogLevel::Debug, QString("string: %1").arg(timeString));*/
+
     QStringList timeStringList = timeString.split(":");
-    if(timeStringList.size() < 2 || timeStringList[0].isEmpty() || timeStringList[1].isEmpty()){
-        logger->log(Logger::LogLevel::Debug, QString("stringList: %1").arg(timeStringList[0]));
+    if (timeStringList.size() < 2 || timeStringList[0].isEmpty() || timeStringList[1].isEmpty()) {
+        /*if (logger)
+            logger->log(Logger::LogLevel::Debug,
+                        QString("stringList: %1").arg(timeStringList.value(0)));*/
         return 0.0;
     }
-    logger->log(Logger::LogLevel::Debug, QString("stringList: %1 %2").arg(timeStringList[0], timeStringList[1]));
+
+    /*if (logger)
+        logger->log(Logger::LogLevel::Debug,
+                    QString("stringList: %1 %2").arg(timeStringList[0], timeStringList[1]));*/
+
     int hour = timeStringList[0].toInt();
     int minute = timeStringList[1].toInt();
-    if(hour < 0 || hour >= 13 && minute >= 0 || minute < 0 || minute >= 60){
-        logger->log(Logger::LogLevel::Warning, QString("Values are not correct: hour = %1, minute = %2").arg(hour, minute));
+
+    if (hour < 0 || hour >= 13 && minute >= 0 || minute < 0 || minute >= 60) {
+        /*if (logger)
+            logger->log(Logger::LogLevel::Warning,
+                        QString("Values are not correct: hour = %1, minute = %2")
+                            .arg(hour)
+                            .arg(minute));*/
         return 0.0;
     }
-    QTime time = QTime(hour, minute);
-    return double(time.hour()) + double((time.minute() / 0.6) / 100);*/
-    return 0;
+
+    QTime time(hour, minute);
+    return double(time.hour()) + double((time.minute() / 0.6) / 100);
 }
+
 
 /* Returns true if there are no workdays on the journal */
 bool Journal::isEmpty() const

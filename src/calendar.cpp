@@ -1,9 +1,8 @@
 #include "libkairos/calendar.h"
-//#include "applicationcontroller.h"
 
 /* Calculate total workable hours in a month */
 double Calendar::workableHours(int year, int month,
-                               double hoursPerDay) {
+                               double hoursPerDay, const Journal *journal) {
     int totalDays = QDate(year, month, 1).daysInMonth();
     double workableHours = 0;
 
@@ -14,7 +13,7 @@ double Calendar::workableHours(int year, int month,
         if (currentDate.dayOfWeek() != Qt::Saturday &&
             currentDate.dayOfWeek() != Qt::Sunday) {
             // Check if current day is not a holiday
-            if(!isHoliday(currentDate)) {
+            if(!isHoliday(currentDate, journal)) {
                 workableHours += hoursPerDay;
             }
         }
@@ -25,7 +24,7 @@ double Calendar::workableHours(int year, int month,
 
 /* Calculate total workable hours in a specified time span */
 double Calendar::workableHours(QDate& from, QDate& to,
-                               double hoursPerDay) {
+                               double hoursPerDay, const Journal *journal) {
     double workableHours = 0;
 
     // Loop through each day in month
@@ -34,7 +33,7 @@ double Calendar::workableHours(QDate& from, QDate& to,
         if (currentDate.dayOfWeek() != Qt::Saturday &&
             currentDate.dayOfWeek() != Qt::Sunday) {
             // Check if current day is not a holiday
-            if(!isHoliday(currentDate)) {
+            if(!isHoliday(currentDate, journal)) {
                 workableHours += hoursPerDay;
             }
         }
@@ -44,34 +43,41 @@ double Calendar::workableHours(QDate& from, QDate& to,
 }
 
 /* Function to check if a given date is a holiday */
-bool Calendar::isHoliday(QDate &date) {
-    /*ApplicationController *app = ApplicationController::get_instance();
-    Journal journal = app->getJournal();
-    QVector<Workday> workdays = journal.getWorkdays();
-
-    // This solution isn't the best one.
-    // Probably something like get Workday(QDate &date) should be implemented, but I already used so much time on this
-    for(auto& workday : workdays){
-        if(workday.getDate() == date){
-            int tpShortCode = workday.getTP();
-            QVector<WorkdaySegment> segments = workday.getSegments();
-            for(auto& segment : segments){
-                WorkdaySegmentType type = segment.getType();
-                if(type == Invalid)
-                    return false;
-            }
-            // WHY is target time a QTime datatype? Isn't it just an integer
-            if(tpShortCode != 101 && workday.getTargetTime() == QTime(0, 0))
-                return true;
-        }
-    }*/
-
-    QList<QDate> holidays = { // Only dates with a fixed date should be here...
+bool Calendar::isHoliday(const QDate &date, const Journal *journal)
+{
+    // 1. Fixed calendar holidays
+    const QList<QDate> holidays = {
         QDate(date.year(), 1, 1),       // New Year's Day
         QDate(date.year(), 5, 1),       // Labour Day
         QDate(date.year(), 10, 3),      // Day of German Unity
         QDate(date.year(), 12, 25),     // Christmas Day
         QDate(date.year(), 12, 26),     // Second Christmas Day
     };
-    return holidays.contains(date);
+
+    if (holidays.contains(date)) {
+        return true;
+    }
+
+    // 2. Optional: derive "holidays" from Journal (user specific)
+    if (!journal) {
+        return false;
+    }
+
+    QVector<Workday> workdays = journal->getWorkdays();
+
+    for (auto &workday : workdays) {
+        if (workday.getDate() == date) {
+            int tpShortCode = workday.getTP();
+            QVector<WorkdaySegment> segments = workday.getSegments();
+            for (auto &segment : segments) {
+                WorkdaySegmentType type = segment.getType();
+                if (type == Invalid)
+                    return false;
+            }
+            if (tpShortCode != 101 && workday.getTargetTime() == QTime(0, 0))
+                return true;
+        }
+    }
+
+    return false;
 }
