@@ -1,0 +1,46 @@
+name: Build, Test (Linux)
+
+on:
+  pull_request:
+    branches:
+      - stable
+      - develop
+    paths:
+      - 'tests/**'
+      - 'src/**'
+      - '.github/workflows/build-test.yml'
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install Qt and CMake
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qt6-base-dev qt6-declarative-dev libqt6charts6-dev cmake build-essential libgl1-mesa-dev
+
+      - name: Configure and build
+        run: |
+          mkdir build
+          cd build
+          cmake -DCMAKE_PREFIX_PATH=/usr/lib/x86_64-linux-gnu/cmake ..
+          cmake --build . --target libkairos_tests
+
+      - name: Run tests
+        env:
+        QT_QPA_PLATFORM: offscreen
+        run: |
+          cd build
+          ctest --output-on-failure
+          if [ $? -ne 0 ]; then
+            echo "Tests failed"
+            exit 1
+          else
+            echo "All tests passed"
+          fi 
