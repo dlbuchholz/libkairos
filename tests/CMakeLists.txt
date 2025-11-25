@@ -10,6 +10,9 @@ FetchContent_MakeAvailable(googletest)
 
 add_executable(libkairos_tests
     test_time.cpp
+    test_workday.cpp
+    test_workdaysegment.cpp
+    test_journal.cpp
 )
 
 target_link_libraries(libkairos_tests
