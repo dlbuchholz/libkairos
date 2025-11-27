@@ -61,9 +61,38 @@ TEST(TimeTest, ConstructorWithCustomFormat_InvalidTime) {
     QString timeString = "34";
     QString format = "mm:ss"; // Custom format
 
+    EXPECT_THROW(
+        {
+            Time t(timeString, format);   // actual constructor call
+        },
+        std::invalid_argument);
+
+
     // Check if constructing a Time object with an invalid time string throws an exception
-    EXPECT_THROW(Time(timeString, format), std::invalid_argument);
+    // EXPECT_THROW(Time(timeString, format), std::invalid_argument);
 }
+
+TEST(TimeTest, ConstructorWithMoreTwoDotsInFormatAndTimeString_InvalidFormat) {
+    // Invalid time string (missing minutes)
+    QString timeString = "12:34:56:78";
+    QString format = "ab:cd:ef:gh"; // Custom format
+
+    Time time(timeString, format);
+
+    EXPECT_THROW(
+        {
+            Time t(timeString, format);   // actual constructor call
+        },
+        std::invalid_argument);
+
+
+    // Check if constructing a Time object with an invalid time string throws an exception
+    // EXPECT_THROW(Time(timeString, format), std::invalid_argument);
+}
+
+
+
+
 
 TEST(TimeMethods, AbsDiff) {
     Time start(3600); // 1 hours in seconds

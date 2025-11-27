@@ -16,11 +16,54 @@ Time::Time(const QTime& time) : m_seconds(time.hour() * 3600 + time.minute() * 6
 Time::Time(const QString& timeString, const QString& format) {
 
     // Structural check: compare colon count
-    const int inputColons = timeString.count(':');
+    const QString timeStringCopy = timeString;
+    const int inputColons = timeStringCopy.count(':');
     const int formatColons = format.count(':');
+    QString tmpStringHour = timeStringCopy.section(':', 0, 0);
+    QString tmpStringMinute = timeStringCopy.section(':', 1, 1);
+    QString tmpStringSecond = timeStringCopy.section(':', 2, 2);
+    int counterTimeFragments = 0;
 
     if (inputColons != formatColons) {
         throw std::invalid_argument("Invalid time format");
+    }
+    if (formatColons > 2) {
+        throw std::invalid_argument("Format is invalid, does not");
+    }
+    if (timeStringCopy.length() > 8 || timeStringCopy.length() <= 0) {
+        throw std::invalid_argument(&"Invalid time String length. Length: " [timeStringCopy.toStdString().size()]);
+    }
+    if (format.contains('h') && (tmpStringHour.toInt() < 0 || tmpStringHour.toInt() > 25)) {
+        throw std::invalid_argument("Invalid hour value " + tmpStringHour.toStdString());
+    }
+    if (format.contains('m') && (tmpStringMinute.toInt() < 0 || tmpStringMinute.toInt() >= 60)) {
+        throw std::invalid_argument("Invalid minute value " + tmpStringMinute.toStdString());
+    }
+    if (format.contains('s') && (tmpStringSecond.toInt() < 0 || tmpStringSecond.toInt() >= 60)) {
+        throw std::invalid_argument("Invalid seconds value " + tmpStringMinute.toStdString());
+    }
+    if (format.contains('h')) {
+        counterTimeFragments++;
+    } else if (format.contains('m')) {
+        counterTimeFragments++;
+    } else if (format.contains('s')) {
+        counterTimeFragments++;
+    }
+
+    for (int i = 0; i < counterTimeFragments; ++i){ // 0 -> hh, 1 -> mm, 2 -> ss
+        if (timeStringCopy.contains(':')) {
+            QString tmpString = timeStringCopy.section(':', i, i);
+            if (tmpString.isNull()) {
+                throw std::invalid_argument("String value is null " + tmpString.toStdString());
+            }
+            else if (tmpString.isEmpty()) {
+                throw std::invalid_argument("String is empty");
+            }
+        } else {
+            if (timeStringCopy.length() > 0 && !(timeStringCopy.isEmpty())) {
+                throw std::invalid_argument("String contains invalid time format " + timeStringCopy.toStdString() + " -> should be hh:mm:ss");
+            }
+        }
     }
 
     // Parse the QString using QTime::fromString with the specified format
