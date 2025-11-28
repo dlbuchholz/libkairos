@@ -78,14 +78,6 @@ Time::Time(const QString& timeString, const QString& format) {
     m_seconds = time.hour() * 3600 + time.minute() * 60 + time.second();
 }
 
-/* Calculate the absolute time difference between two Time objects and
- * construct a new Time object from the result. Result is guaranteed to be
- * positve. */
-Time Time::abs_diff(const Time& start, const Time& end) {
-    int differenceInSeconds = std::abs(end.seconds() - start.seconds());
-    return Time(differenceInSeconds);
-}
-
 /* Calculate the time difference between two Time objects and construct a new
  * Time object from the result. Result may be negative */
 Time Time::diff(const Time& start, const Time& end) {

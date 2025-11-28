@@ -73,11 +73,9 @@ TEST(TimeTest, ConstructorWithCustomFormat_InvalidTime) {
 }
 
 TEST(TimeTest, ConstructorWithMoreTwoDotsInFormatAndTimeString_InvalidFormat) {
-    // Invalid time string (missing minutes)
+    // Invalid time string
     QString timeString = "12:34:56:78";
     QString format = "ab:cd:ef:gh"; // Custom format
-
-    Time time(timeString, format);
 
     EXPECT_THROW(
         {
@@ -97,15 +95,15 @@ TEST(TimeTest, ConstructorWithMoreTwoDotsInFormatAndTimeString_InvalidFormat) {
 TEST(TimeMethods, AbsDiff) {
     Time start(3600); // 1 hours in seconds
     Time end(7200);   // 2 hours in seconds
-    Time difference = Time::abs_diff(start, end);
-    EXPECT_EQ(difference.seconds(), 3600); // 1 hour difference
+    Time difference = Time::diff(start, end);
+    EXPECT_EQ(abs(difference.seconds()), 3600); // 1 hour difference
 }
 
 TEST(TimeMethods, AbsDiffNegative) {
     Time start(7200); // 2 hours in seconds
     Time end(3600);   // 1 hours in seconds
-    Time difference = Time::abs_diff(start, end);
-    EXPECT_EQ(difference.seconds(), 3600); // 1 hour difference
+    Time difference = Time::diff(start, end);
+    EXPECT_EQ(abs(difference.seconds()), 3600); // 1 hour difference
 }
 
 TEST(TimeMethods, Diff) {
