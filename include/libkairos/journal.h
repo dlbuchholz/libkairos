@@ -219,6 +219,7 @@ public:
     double getTargetTime() const;
 
     double getTimeValues(QString string) const;
+    double getMaxTelecommuteTime(const QDate &from, const QDate &to, const double factor, const double targetTime);
 private:
     mutable QVector<Workday> workdays; /**< List of workdays in the journal. */
     /**
