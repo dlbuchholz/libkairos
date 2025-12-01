@@ -69,8 +69,43 @@ double Journal::calculateTelecommutePeriod(const QDate& from, const QDate& to) {
 double Journal::remainingTelecommuteTime(const QDate& from, const QDate& to,
                                          const double factor,
                                          const double targetTime) {
-    double maxTelecommuteTime = Calendar::workableHours(from.year(), from.month(), targetTime, this) * factor;
+    double maxTelecommuteTime = getMaxTelecommuteTime(from, to, factor, targetTime);
     return maxTelecommuteTime - calculateTelecommutePeriod(from, to);
+}
+
+double Journal::getMaxTelecommuteTime(const QDate& from, const QDate& to,
+                                      const double factor,
+                                      const double targetTime) {
+    // Basis: alle grundsätzlich möglichen Telearbeitsstunden im Monat
+    double maxTelecommuteTime =
+        Calendar::workableHours(from.year(), from.month(), targetTime, this) * factor;
+
+    // Relevante Workdays im gewünschten Zeitraum
+    QVector<Workday> workdaysInTimespan = getWorkdays(from, to);
+
+    for (const auto &workday : workdaysInTimespan) {
+        const QDate date = workday.getDate();
+
+        // Nur Tage im selben Monat wie "from" berücksichtigen
+        if (date.year() != from.year() || date.month() != from.month())
+            continue;
+
+        // Nur reguläre Werktage, die auch in workableHours enthalten sind
+        if (date.dayOfWeek() == Qt::Saturday || date.dayOfWeek() == Qt::Sunday)
+            continue;
+        if (Calendar::isHoliday(date, this))
+            continue;
+
+        // Wenn dieser Tag AbsentType ist, gibt es an diesem Tag 0 telecommute Kapazität
+        if (workday.getType() == WorkdayType::AbsentType) {
+            maxTelecommuteTime -= targetTime * factor;
+        }
+    }
+
+    if (maxTelecommuteTime < 0.0)
+        maxTelecommuteTime = 0.0;
+
+    return maxTelecommuteTime;
 }
 
 /* Returns the percentage of spent telecommute time */
