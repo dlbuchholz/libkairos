@@ -86,10 +86,6 @@ double Journal::getMaxTelecommuteTime(const QDate& from, const QDate& to,
     for (const auto &workday : workdaysInTimespan) {
         const QDate date = workday.getDate();
 
-        // Nur Tage im selben Monat wie "from" berücksichtigen
-        if (date.year() != from.year() || date.month() != from.month())
-            continue;
-
         // Nur reguläre Werktage, die auch in workableHours enthalten sind
         if (date.dayOfWeek() == Qt::Saturday || date.dayOfWeek() == Qt::Sunday)
             continue;
