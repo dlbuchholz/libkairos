@@ -9,7 +9,7 @@ on:
       - 'tests/**'
       - 'src/**'
       - 'include/**'
-      - '.github/workflows/build-test.yml'
+      - '.github/workflows/build-test-linux.yml'
 jobs:
   build-test:
     runs-on: ubuntu-latest
