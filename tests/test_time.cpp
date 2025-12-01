@@ -19,6 +19,13 @@ TEST(TimeConstructor, QTimeConstructor) {
     EXPECT_EQ(time.seconds(), 5400);
 }
 
+
+
+
+
+
+
+
 TEST(TimeTest, ConstructorWithDefaultFormat_ValidTime) {
     // Valid time string in the default format (hh:mm:ss)
     QString timeString = "12:34:56";
@@ -87,6 +94,27 @@ TEST(TimeTest, ConstructorWithMoreTwoDotsInFormatAndTimeString_InvalidFormat) {
     // Check if constructing a Time object with an invalid time string throws an exception
     // EXPECT_THROW(Time(timeString, format), std::invalid_argument);
 }
+
+TEST(TimeTest, ConstructorTimeStringLengthTooLongWithoutFormat_InvalidTime) {
+    // Invalid time string
+    QString timeString = "12:34:567";
+
+    EXPECT_THROW(
+        {
+            Time t(timeString);   // actual constructor call
+        },
+        std::invalid_argument);
+}
+
+
+
+
+
+
+
+
+
+
 
 
 
