@@ -106,6 +106,7 @@ WorkdayType Workday::getType() const
     for (const auto& segment : segments) {
 
         if (segment.getType() == TelecommuteWork ||
+            segment.getType() == AbsentFlexday ||
             segment.getType() == BusinessTrip ||
             segment.getType() == OfficeWork) {
             return WorkdayType::PresentType;
