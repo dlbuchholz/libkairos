@@ -68,7 +68,7 @@ QString WorkdaySegment::typeToString(WorkdaySegmentType type) {
         case AbsentWeekend: return "Wochenende";
         case AbsentHoliday: return "Feiertag";
         case AbsentVacation: return "Urlaub";
-        case AbsentEducation: return "Abwesend (Unterricht)";
+        case AbsentEducation: return "Unterricht";
         case AbsentMedical: return "Abwesend (Krankheit)";
         case AbsentFlexday: return "Gleittag";
         case AbsentExcused: return "Abwesend (entschuldigt)";

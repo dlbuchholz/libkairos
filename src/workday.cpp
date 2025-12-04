@@ -105,15 +105,16 @@ WorkdayType Workday::getType() const
     // Iterate through each segment
     for (const auto& segment : segments) {
 
-        if (segment.getType() == TelecommuteWork ||
-            segment.getType() == AbsentFlexday ||
-            segment.getType() == BusinessTrip ||
-            segment.getType() == OfficeWork) {
+        if (segment.getType() == TelecommuteWork || // flex Arb GelStd Monat
+            segment.getType() == AbsentFlexday ||   // FZ Arbeit außer FA Monat
+            segment.getType() == AbsentEducation || // FZ Arbeit außer FA Monat
+            segment.getType() == BusinessTrip ||    // FZ Arbeit außer FA Monat
+            segment.getType() == OfficeWork) {      // NtArb Monat
             return WorkdayType::PresentType;
         }
     }
 
-    return WorkdayType::AbsentType;
+    return WorkdayType::AbsentType;                 // FZ keine Arbeit
 }
 
 /* Returns *all* segments on a workday */
