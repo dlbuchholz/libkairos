@@ -55,6 +55,64 @@ Workday& Journal::getWorkdayByDate(const QDate& date) {
     }
 }
 
+double Journal::effectiveWorkableHours(const QDate &from,
+                                       const QDate &to,
+                                       double targetTime) const
+{
+    if (to < from) {
+        return 0.0;
+    }
+
+    // 1. Zeitraum auf volle Monate erweitern:
+    //    - startOfRange = erster Tag des from-Monats
+    //    - endOfRange   = letzter Tag des to-Monats
+    QDate startOfRange(from.year(), from.month(), 1);
+    QDate endOfRange(to.year(), to.month(),
+                     QDate(to.year(), to.month(), 1).daysInMonth());
+
+    // 2. Basis: Sollstunden über alle vollen Monate summieren
+    double workable = 0.0;
+
+    int year  = startOfRange.year();
+    int month = startOfRange.month();
+
+    while (QDate(year, month, 1) <= QDate(endOfRange.year(), endOfRange.month(), 1)) {
+        workable += Calendar::workableHours(year, month, targetTime, this);
+
+        if (month == 12) {
+            month = 1;
+            ++year;
+        } else {
+            ++month;
+        }
+    }
+
+    // 3. Fehlzeiten im erweiterten Bereich genau einmal abziehen
+    QVector<Workday> days = getWorkdays(startOfRange, endOfRange);
+
+    for (const auto &workday : days) {
+        const QDate date = workday.getDate();
+
+        // Nur reguläre Arbeitstage berücksichtigen
+        if (date.dayOfWeek() == Qt::Saturday || date.dayOfWeek() == Qt::Sunday)
+            continue;
+        if (Calendar::isHoliday(date, this)) {
+            continue;
+        }
+
+        // Voller Abwesenheitstag
+        if (workday.getType() == AbsentType) {
+            workable -= targetTime;
+        }
+    }
+
+    if (workable < 0.0) {
+        workable = 0.0;
+    }
+
+    return workable;
+}
+
 /* Returns the total telecommute time in a specified time span (in hours) */
 double Journal::calculateTelecommutePeriod(const QDate& from, const QDate& to) {
     QVector<Workday> workdaysInTimespan = getWorkdays(from, to);
@@ -73,40 +131,18 @@ double Journal::remainingTelecommuteTime(const QDate& from, const QDate& to,
     return maxTelecommuteTime - calculateTelecommutePeriod(from, to);
 }
 
-double Journal::getMaxTelecommuteTime(const QDate& from, const QDate& to,
+double Journal::getMaxTelecommuteTime(const QDate &from,
+                                      const QDate &to,
                                       const double factor,
-                                      const double targetTime) {
-    // Basis: alle grundsätzlich möglichen Telearbeitsstunden im Monat
-    double maxTelecommuteTime =
-        Calendar::workableHours(from.year(), from.month(), targetTime, this) * factor;
-
-    // Relevante Workdays im gewünschten Zeitraum
-    QVector<Workday> workdaysInTimespan = getWorkdays(from, to);
-
-    for (const auto &workday : workdaysInTimespan) {
-        const QDate date = workday.getDate();
-
-        // Nur reguläre Werktage, die auch in workableHours enthalten sind
-        if (date.dayOfWeek() == Qt::Saturday || date.dayOfWeek() == Qt::Sunday)
-            continue;
-        if (Calendar::isHoliday(date, this))
-            continue;
-
-        // Wenn dieser Tag AbsentType ist, gibt es an diesem Tag 0 telecommute Kapazität
-        if (workday.getType() == WorkdayType::AbsentType) {
-            maxTelecommuteTime -= targetTime * factor;
-        }
-    }
-
-    if (maxTelecommuteTime < 0.0)
-        maxTelecommuteTime = 0.0;
-
-    return maxTelecommuteTime;
+                                      const double targetTime) const
+{
+    double effWorkable = effectiveWorkableHours(from, to, targetTime);
+    return effWorkable * factor;
 }
 
 /* Returns the percentage of spent telecommute time */
 double Journal::spentTelecommuteTime(const QDate& from, const QDate& to) {
-    double workableHours = Calendar::workableHours(from.year(), from.month(), 7.8, this);
+    double workableHours = Calendar::workableHours(from.year(), from.month(), this->getTargetTime(), this);
     return (calculateTelecommutePeriod(from, to) / workableHours);
 }
 
