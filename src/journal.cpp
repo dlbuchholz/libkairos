@@ -57,10 +57,41 @@ Workday& Journal::getWorkdayByDate(const QDate& date) {
 
 double Journal::effectiveWorkableHours(const QDate &from,
                                        const QDate &to,
-                                       double targetTime) const
+                                       double targetTime,
+                                       bool directCalculation) const
 {
     if (to < from) {
         return 0.0;
+    }
+
+    // Für kurze Zeiträume (z. B. Woche): Direkte Berechnung
+    if (directCalculation) {
+        double workable = 0.0;
+        QDate current = from;
+
+        while (current <= to) {
+            if (current.dayOfWeek() != Qt::Saturday &&
+                current.dayOfWeek() != Qt::Sunday &&
+                ! Calendar::isHoliday(current, this)) {
+                workable += targetTime;
+            }
+            current = current.addDays(1);
+        }
+
+        // Fehlzeiten abziehen
+        QVector<Workday> days = getWorkdays(from, to);
+        for (const auto &workday : days) {
+            const QDate date = workday.getDate();
+            if (date.dayOfWeek() == Qt::Saturday || date.dayOfWeek() == Qt::Sunday)
+                continue;
+            if (Calendar::isHoliday(date, this))
+                continue;
+            if (workday.getType() == AbsentType) {
+                workable -= targetTime;
+            }
+        }
+
+        return qMax(0.0, workable);
     }
 
     // 1. Zeitraum auf volle Monate erweitern:

@@ -220,7 +220,7 @@ public:
 
     double getTimeValues(QString string) const;
     double getMaxTelecommuteTime(const QDate &from, const QDate &to, const double factor, const double targetTime) const;
-    double effectiveWorkableHours(const QDate &from, const QDate &to, double targetTime) const;
+    double effectiveWorkableHours(const QDate &from, const QDate &to, double targetTime, bool directCalculation = false) const;
 private:
     mutable QVector<Workday> workdays; /**< List of workdays in the journal. */
     /**
